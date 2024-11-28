@@ -17,12 +17,16 @@ public class IntoTheDeepTele extends LinearOpMode {
     private DcMotor rightFront;
     private DcMotor leftBack;
     private DcMotor rightBack;
+    private Servo leftLinkage;
+    private Servo rightLinkage;
     /*
     private DcMotor armMotor;
     private Servo wheelServo;
     private Servo rotationServo;
-    private DcMotor slideMotor;
-     */
+
+     quang, it is shower time
+     is this the real life
+     is this just fantasy*/
 
     @Override
 
@@ -31,6 +35,8 @@ public class IntoTheDeepTele extends LinearOpMode {
         leftBack = hardwareMap.dcMotor.get("leftBack");
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
+        leftLinkage = hardwareMap.get(Servo.class,"leftLinkage");
+        rightLinkage = hardwareMap.get(Servo.class,"rightLinkage");
         /*
         armMotor = hardwareMap.dcMotor.get("armMotor");
         slideMotor = hardwareMap.dcMotor.get("slideMotor");
@@ -49,14 +55,14 @@ public class IntoTheDeepTele extends LinearOpMode {
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        waitForStart();
         //LETS THE "ROTATE()" METHOD DO THE REST
         rotate();
         //UPDATES ROBOT'S POSITION (BUT WE DON'T REALLY USE IT)
-        telemetry.update();
+
     }
 
     private void rotate() {
-        waitForStart();
 
 
         //THESE THINGS ARE SO THE TOGGLE WORKS
@@ -73,7 +79,8 @@ public class IntoTheDeepTele extends LinearOpMode {
 
         boolean armPressed = false;
 
-        //rotationServo.setPosition(0);
+        leftLinkage.setPosition(0);
+        rightLinkage.setPosition(1);
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -124,20 +131,23 @@ public class IntoTheDeepTele extends LinearOpMode {
                 //SETS THE POWER EQUAL TO SLIDE POWER
                 //slideMotor.setPower(slidePower);
 
-                /*
+
+
+
                 if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y) {
-                    if(armPos != 1){
-                        armPos+= 0.1;
-                    }
+                    leftLinkage.setPosition(leftLinkage.getPosition()+0.1);
+                    rightLinkage.setPosition(rightLinkage.getPosition()-0.1);
                 }
-
                 if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                    if(armPos != 0){
-                        armPos -= 0.1;
-                    }
+                    leftLinkage.setPosition(leftLinkage.getPosition()-0.1);
+                    rightLinkage.setPosition(rightLinkage.getPosition()+0.1);
                 }
-                rotationServo.setPosition(armPos);
+                telemetry.addData("leftpos",leftLinkage.getPosition());
+                telemetry.addData("rightpos",rightLinkage.getPosition());
+                telemetry.update();
 
+
+                /*
                 double wheelPos = wheelServo.getPosition();
 
                 //CR SERVO: POSITION OF 0.5 = STOP, <0.5 = REVERSE, >0.5 = FORWARD
