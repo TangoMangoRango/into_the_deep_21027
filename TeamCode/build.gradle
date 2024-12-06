@@ -26,6 +26,7 @@ android {
 repositories {
     maven {
         url = 'https://maven.brott.dev/'
+        url "https://repo.dairy.foundation/releases"
     }
 }
 
@@ -36,4 +37,8 @@ dependencies {
     implementation "com.acmerobotics.roadrunner:core:1.0.0"
     implementation "com.acmerobotics.roadrunner:actions:1.0.0"
     implementation "com.acmerobotics.dashboard:dashboard:0.4.16"
+
+    implementation "dev.frozenmilk.dairy:Core:1.0.0"
+    implementation "dev.frozenmilk.dairy:Util:1.1.0"
+    implementation "dev.frozenmilk.mercurial:Mercurial:1.0.0"
 }
