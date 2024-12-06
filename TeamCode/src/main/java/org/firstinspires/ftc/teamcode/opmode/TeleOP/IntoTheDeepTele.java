@@ -7,18 +7,24 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.subsystem.HorizSlide;
+
 
 @TeleOp
 public class IntoTheDeepTele extends LinearOpMode {
 
 
-//quang is stinky
+    //quang is stinky
     private DcMotor leftFront;
     private DcMotor rightFront;
     private DcMotor leftBack;
     private DcMotor rightBack;
+    private DcMotor slideMotor;
     private Servo leftLinkage;
     private Servo rightLinkage;
+    private Servo bottomWrist;
+
+    //private HorizSlide slidey;
     /*
     private DcMotor armMotor;
     private Servo wheelServo;
@@ -35,15 +41,13 @@ public class IntoTheDeepTele extends LinearOpMode {
         leftBack = hardwareMap.dcMotor.get("leftBack");
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
-        leftLinkage = hardwareMap.get(Servo.class,"leftLinkage");
-        rightLinkage = hardwareMap.get(Servo.class,"rightLinkage");
-        /*
-        armMotor = hardwareMap.dcMotor.get("armMotor");
         slideMotor = hardwareMap.dcMotor.get("slideMotor");
-        rotationServo = hardwareMap.get(Servo.class,"rotationServo");
-        wheelServo = hardwareMap.get(Servo.class, "wheelServo");
+        leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
+        rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
+        bottomWrist = hardwareMap.get(Servo.class, "bottomWrist");
+        //slidey = new HorizSlide(hardwareMap);
 
-         */
+
         //RIGHT MOTORS MUST BE ROTATED BECAUSE THE GEARS CHANGE THEIR ROTATION
         //ALSO I DID THE MATH WRONG DO THIS ACCOUNTS FOR THAT
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -75,12 +79,13 @@ public class IntoTheDeepTele extends LinearOpMode {
         //STARTS AT FULL SPEED
         double speed = 1;
 
-        double armPos = 0;
+        double linkagePos = -1;
 
         boolean armPressed = false;
 
         leftLinkage.setPosition(0);
         rightLinkage.setPosition(1);
+        bottomWrist.setPosition(0);
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
@@ -123,27 +128,34 @@ public class IntoTheDeepTele extends LinearOpMode {
                 double rightTrigger = gamepad2.right_trigger;
 
                 //RIGHT GOES UP, LEFT GOES DOWN. DIVIDE BY 2 FOR HALF SPEED.
-                double powerTotal = ((leftTrigger/3) - rightTrigger);
-                //FEEDS POWER TO ARM
-                //armMotor.setPower(powerTotal);
-                //SETS SLIDEPOWER TO LEFT STICK Y
-                double slidePower = gamepad2.left_stick_y;
-                //SETS THE POWER EQUAL TO SLIDE POWER
-                //slideMotor.setPower(slidePower);
+                double slidePower = (leftTrigger - rightTrigger);
+                slideMotor.setPower(slidePower);
 
 
 
 
                 if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y) {
-                    leftLinkage.setPosition(leftLinkage.getPosition()+0.1);
-                    rightLinkage.setPosition(rightLinkage.getPosition()-0.1);
+                    if(linkagePos ==1){
+                        leftLinkage.setPosition(0);
+                        rightLinkage.setPosition(1);
+                    }
+                    else{
+                        leftLinkage.setPosition(1);
+                        rightLinkage.setPosition(0);
+                    }
+                    linkagePos = -linkagePos;
                 }
-                if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                    leftLinkage.setPosition(leftLinkage.getPosition()-0.1);
-                    rightLinkage.setPosition(rightLinkage.getPosition()+0.1);
+//                telemetry.addData("leftpos",leftLinkage.getPosition());
+//                telemetry.addData("rightpos",rightLinkage.getPosition());
+
+                if(gamepad2.x && currentGamepad2.x && !previousGamepad2.x){
+                    if(bottomWrist.getPosition()==0){
+                        bottomWrist.setPosition(1);
+                    }
+                    else {
+                        bottomWrist.setPosition(0);
+                    }
                 }
-                telemetry.addData("leftpos",leftLinkage.getPosition());
-                telemetry.addData("rightpos",rightLinkage.getPosition());
                 telemetry.update();
 
 
