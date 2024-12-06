@@ -84,17 +84,17 @@ public class PlayerTeleOp extends LinearOpMode{
                 if (speed != .8)
                     speed = .8;
                 else
-                    speed = 0.5;
+                    speed = 0.4;
             }
 
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
             double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            double frontLeftPower = ((rotY + rotX + rx) / denominator) / speed;
-            double backLeftPower = ((rotY - rotX + rx) / denominator) / speed;
-            double frontRightPower = ((rotY - rotX - rx) / denominator) / speed;
-            double backRightPower = ((rotY + rotX - rx) / denominator) / speed;
+            double frontLeftPower = ((rotY + rotX + rx) / denominator) * speed;
+            double backLeftPower = ((rotY - rotX + rx) / denominator) * speed;
+            double frontRightPower = ((rotY - rotX - rx) / denominator) * speed;
+            double backRightPower = ((rotY + rotX - rx) / denominator) * speed;
 
             frontLeft.setPower(frontLeftPower);
             backLeft.setPower(backLeftPower);
