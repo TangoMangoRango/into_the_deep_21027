@@ -24,21 +24,30 @@ public class PlayerTeleOp extends LinearOpMode{
         DcMotorEx slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
         Servo leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
         Servo rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
-        Servo bottomWrist = hardwareMap.get(Servo.class, "bottomWrist");
+        Servo leftIntake = hardwareMap.get(Servo.class, "leftIntake");
+        Servo rightIntake = hardwareMap.get(Servo.class, "rightIntake");
+        Servo intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
+        Servo intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
 
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightLinkage.setDirection(Servo.Direction.REVERSE);
+        rightIntake.setDirection(Servo.Direction.REVERSE);
+
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
@@ -50,10 +59,11 @@ public class PlayerTeleOp extends LinearOpMode{
         double speed = .8;
 
         double linkagePos = -1;
+        int armCounter = 0;
 
         leftLinkage.setPosition(0);
-        rightLinkage.setPosition(1);
-        bottomWrist.setPosition(0);
+        rightLinkage.setPosition(0);
+        intakeWrist.setPosition(.5);
 
         waitForStart();
 
@@ -79,13 +89,7 @@ public class PlayerTeleOp extends LinearOpMode{
 
             rotX = rotX * 1.1;  // Counteract imperfect strafing
 
-            //HALF-SPEED TOGGLE
-            if (gamepad1.x && !previousGamepad1.x && currentGamepad1.x) {
-                if (speed != .8)
-                    speed = .8;
-                else
-                    speed = 0.4;
-            }
+
 
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
@@ -118,23 +122,37 @@ public class PlayerTeleOp extends LinearOpMode{
             if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y) {
                 if (linkagePos == 1) {
                     leftLinkage.setPosition(0);
-                    rightLinkage.setPosition(1);
-                } else {
-                    leftLinkage.setPosition(1);
                     rightLinkage.setPosition(0);
+                } else {
+                    leftLinkage.setPosition(.3);
+                    rightLinkage.setPosition(.3);
                 }
                 linkagePos = -linkagePos;
             }
-            //                telemetry.addData("leftpos",leftLinkage.getPosition());
-            //                telemetry.addData("rightpos",rightLinkage.getPosition());
 
             if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                if (bottomWrist.getPosition() == 0) {
-                    bottomWrist.setPosition(1);
+                if (intakeWrist.getPosition() == 0) {
+                    intakeWrist.setPosition(.9);
                 } else {
-                    bottomWrist.setPosition(0);
+                    intakeWrist.setPosition(0.7);
                 }
             }
+
+            if (gamepad2.a && currentGamepad2.a && !previousGamepad2.a) {
+                if(armCounter % 3 == 0) {
+                    leftIntake.setPosition(.5);
+                    rightIntake.setPosition(.5);
+                }else if(armCounter % 3 == 1) {
+                    leftIntake.setPosition(.6);
+                    rightIntake.setPosition(.6);
+                } else {
+                    leftIntake.setPosition((0));
+                    rightIntake.setPosition(0);
+                }
+                armCounter++;
+            }
+
+
             telemetry.update();
         }
     }
