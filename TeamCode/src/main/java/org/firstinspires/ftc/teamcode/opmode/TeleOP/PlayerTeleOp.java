@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @TeleOp
 public class PlayerTeleOp extends LinearOpMode{
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode(){
         // Declare our motors
         // Make sure your ID's match your configuration
         DcMotor frontLeft = hardwareMap.dcMotor.get("leftFront");
@@ -28,13 +28,18 @@ public class PlayerTeleOp extends LinearOpMode{
         Servo rightIntake = hardwareMap.get(Servo.class, "rightIntake");
         Servo intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
         Servo intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
+        Servo outputClaw = hardwareMap.get(Servo.class, "outputClaw");
+        Servo outputWrist = hardwareMap.get(Servo.class, "outputWrist");
+        Servo leftOutput = hardwareMap.get(Servo.class, "leftOutput");
+        Servo rightOutput = hardwareMap.get(Servo.class, "leftOutput");
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        rightLinkage.setDirection(Servo.Direction.REVERSE);
-        rightIntake.setDirection(Servo.Direction.REVERSE);
+        leftLinkage.setDirection(Servo.Direction.REVERSE);
+        leftIntake.setDirection(Servo.Direction.REVERSE);
+        intakeClaw.setDirection(Servo.Direction.REVERSE);
 
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -60,10 +65,12 @@ public class PlayerTeleOp extends LinearOpMode{
 
         double linkagePos = -1;
         int armCounter = 0;
+        int claw = 0;
+        int wrist = 0;
 
         leftLinkage.setPosition(0);
         rightLinkage.setPosition(0);
-        intakeWrist.setPosition(.5);
+        intakeWrist.setPosition(.4);
 
         waitForStart();
 
@@ -88,6 +95,12 @@ public class PlayerTeleOp extends LinearOpMode{
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
             rotX = rotX * 1.1;  // Counteract imperfect strafing
+
+            previousGamepad1.copy(currentGamepad1);
+            previousGamepad2.copy(currentGamepad2);
+
+            currentGamepad1.copy(gamepad1);
+            currentGamepad2.copy(gamepad2);
 
 
 
@@ -118,7 +131,8 @@ public class PlayerTeleOp extends LinearOpMode{
 
 
 
-
+            //IF LINKAGEPOS = 1, THEN LINKAGES ARE EXTENDED. IF == -1, LINKAGES ARE RETRACTED. TOGGLES ACCORDINGLY.
+            //POSITION 0 IS HOME POSITION
             if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y) {
                 if (linkagePos == 1) {
                     leftLinkage.setPosition(0);
@@ -130,26 +144,49 @@ public class PlayerTeleOp extends LinearOpMode{
                 linkagePos = -linkagePos;
             }
 
+            //
             if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                if (intakeWrist.getPosition() == 0) {
-                    intakeWrist.setPosition(.9);
+               if (wrist % 2 == 0) {
+                    intakeWrist.setPosition(0.1);
                 } else {
-                    intakeWrist.setPosition(0.7);
+                    intakeWrist.setPosition(0.3);
                 }
+                wrist++;
+
             }
 
             if (gamepad2.a && currentGamepad2.a && !previousGamepad2.a) {
                 if(armCounter % 3 == 0) {
-                    leftIntake.setPosition(.5);
-                    rightIntake.setPosition(.5);
-                }else if(armCounter % 3 == 1) {
-                    leftIntake.setPosition(.6);
-                    rightIntake.setPosition(.6);
-                } else {
+                    leftIntake.setPosition(.7);
+                    rightIntake.setPosition(.7);
+                } else if(armCounter % 3 == 1) {
+                    leftIntake.setPosition(.8);
+                    rightIntake.setPosition(.8);
+                } else if(armCounter % 3 == 2){
                     leftIntake.setPosition((0));
                     rightIntake.setPosition(0);
                 }
                 armCounter++;
+            }
+
+            if (gamepad2.b && currentGamepad2.b && !previousGamepad2.b) {
+                if(claw % 2 == 0) {
+                    intakeClaw.setPosition(0);
+                } else {
+                    intakeClaw.setPosition(.3);
+                }
+                claw++;
+            }
+
+
+            if (gamepad1.x && currentGamepad1.x && !previousGamepad1.x) {
+                if (wrist % 2 == 0) {
+                    outputWrist.setPosition(0);
+                } else {
+                    outputWrist.setPosition(0.3);
+                }
+                wrist++;
+
             }
 
 

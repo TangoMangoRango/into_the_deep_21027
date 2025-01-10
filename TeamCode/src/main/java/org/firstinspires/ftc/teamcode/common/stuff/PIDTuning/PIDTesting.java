@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -27,11 +28,11 @@ public class PIDTesting extends LinearOpMode {
         DcMotor backRight = hardwareMap.dcMotor.get("rightBack");
         Servo leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
         Servo rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
-        Servo bottomWrist = hardwareMap.get(Servo.class, "bottomWrist");
 
         //Currently the one I care about
-        DcMotorEx slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
-        slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        DcMotorEx slideMotor1 = hardwareMap.get(DcMotorEx.class, "slideMotor1");
+        DcMotorEx slideMotor2 = hardwareMap.get(DcMotorEx.class, "slideMotor2");
+        slideMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //Slides look good at 0.02, 0, 0.0001
 
@@ -42,10 +43,11 @@ public class PIDTesting extends LinearOpMode {
 
         while(opModeIsActive()) {
             controller.setPID(p, i, d);
-            int slidePos = slideMotor.getCurrentPosition();
+            int slidePos = slideMotor1.getCurrentPosition();
             double pid = controller.calculate(slidePos, target);
-
-            slideMotor.setPower(pid * .8);
+            
+            slideMotor1.setPower(pid * .8);
+            slideMotor2.setPower(pid * .8);
 
             telemetry.addData("CurrPos: ", slidePos);
             telemetry.addData("Target: ", target);

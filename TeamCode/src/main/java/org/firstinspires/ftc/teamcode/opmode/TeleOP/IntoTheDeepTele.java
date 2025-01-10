@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode.TeleOP;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,64 +16,42 @@ import org.firstinspires.ftc.teamcode.subsystem.HorizSlide;
 public class IntoTheDeepTele extends LinearOpMode {
 
 
-    //quang is stinky
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
-    private DcMotorEx slideMotor;
-    private Servo leftLinkage;
-    private Servo rightLinkage;
-    private Servo bottomWrist;
-
-    //private HorizSlide slidey;
-    /*
-    private DcMotor armMotor;
-    private Servo wheelServo;
-    private Servo rotationServo;
-
-     quang, it is shower time
-     is this the real life
-     is this just fantasy*/
-
     @Override
     public void runOpMode() throws InterruptedException {
-        rightFront = hardwareMap.dcMotor.get("rightFront");
-        leftBack = hardwareMap.dcMotor.get("leftBack");
-        leftFront = hardwareMap.dcMotor.get("leftFront");
-        rightBack = hardwareMap.dcMotor.get("rightBack");
-        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
-        leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
-        rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
-        bottomWrist = hardwareMap.get(Servo.class, "bottomWrist");
+        DcMotor frontLeft = hardwareMap.dcMotor.get("leftFront");
+        DcMotor backLeft = hardwareMap.dcMotor.get("leftBack");
+        DcMotor frontRight = hardwareMap.dcMotor.get("rightFront");
+        DcMotor backRight = hardwareMap.dcMotor.get("rightBack");
+        DcMotorEx slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+        Servo leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
+        Servo rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
+        Servo leftIntake = hardwareMap.get(Servo.class, "leftIntake");
+        Servo rightIntake = hardwareMap.get(Servo.class, "rightIntake");
+        Servo intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
+        Servo intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
+        Servo outputClaw = hardwareMap.get(Servo.class, "outputClaw");
+        Servo outputWrist = hardwareMap.get(Servo.class, "outputWrist");
+        Servo leftOutput = hardwareMap.get(Servo.class, "leftOutput");
+        Servo rightOutput = hardwareMap.get(Servo.class, "rightOutput");
+
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        //slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        leftLinkage.setDirection(Servo.Direction.REVERSE);
+        leftIntake.setDirection(Servo.Direction.REVERSE);
+        rightOutput.setDirection(Servo.Direction.REVERSE);
+        intakeClaw.setDirection(Servo.Direction.REVERSE);
+
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
 
-        //RIGHT MOTORS MUST BE ROTATED BECAUSE THE GEARS CHANGE THEIR ROTATION
-        //ALSO I DID THE MATH WRONG DO THIS ACCOUNTS FOR THAT
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        //BRAKES THE ROBOT WHEN THERE IS NO POWER PROVIDED (NO SLIPPY-SLIDING)
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        //armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        waitForStart();
-
-        if (isStopRequested()) return;
 
         //LETS THE "ROTATE()" METHOD DO THE REST
-        rotate();
-        //UPDATES ROBOT'S POSITION (BUT WE DON'T REALLY USE IT)
-
-    }
-
-    private void rotate() {
-
-
-        //THESE THINGS ARE SO THE TOGGLE WORKS
         Gamepad currentGamepad1 = new Gamepad();
         Gamepad currentGamepad2 = new Gamepad();
 
@@ -82,11 +61,24 @@ public class IntoTheDeepTele extends LinearOpMode {
         //STARTS AT FULL SPEED
         double speed = .8;
 
-        double linkagePos = -1;
+        boolean linkRetract = true;
+        int armCounter = 0;
+        boolean inClawClosed = false;
+        boolean outClawClosed = true;
 
         leftLinkage.setPosition(0);
-        rightLinkage.setPosition(1);
-        bottomWrist.setPosition(0);
+        rightLinkage.setPosition(0);
+        intakeClaw.setPosition(0);
+        outputClaw.setPosition(0.5);
+        intakeWrist.setPosition(.4);
+        leftOutput.setPosition(0);
+        rightOutput.setPosition(0);
+        outputWrist.setPosition(.1);
+
+        waitForStart();
+
+        if (isStopRequested()) return;
+
 
         while (opModeIsActive()) {
             //LETS YOU SEE ROBOT'S POSITION IN THE DASHBOARD
@@ -107,20 +99,14 @@ public class IntoTheDeepTele extends LinearOpMode {
 
             //GETS DENOMINATOR THAT WILL DIVIDE BY TOTAL POWER (SO ROBOT DOESN'T GO SUPER-FAST)
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            //HALF-SPEED TOGGLE
-            if (gamepad1.x && !previousGamepad1.x && currentGamepad1.x) {
-                if (speed != .8)
-                    speed = .8;
-                else
-                    speed = 0.4;
-            }
+            //HALF-SPEED TOGGLe
 
 
             //SETS MOVEMENT OF ROBOT (FORWARD +- SIDE TO SIDE +- ROTATION)/TOTAL POWER
-            leftFront.setPower(((y + x + rx) / denominator) * speed);
-            leftBack.setPower(((y - x + rx) / denominator) * speed);
-            rightFront.setPower(((y - x - rx) / denominator) * speed);
-            rightBack.setPower(((y + x - rx) / denominator) * speed);
+            frontLeft.setPower(((y + x + rx) / denominator) * speed);
+            backLeft.setPower(((y - x + rx) / denominator) * speed);
+            frontRight.setPower(((y - x - rx) / denominator) * speed);
+            backRight.setPower(((y + x - rx) / denominator) * speed);
 
             //SET VARIABLE FOR TRIGGERS. THEY RETURN ONLY POSITIVE VALUES FROM 0-1 DEPENDING ON HOW
             //MUCH THEY'RE PRESSED
@@ -131,51 +117,107 @@ public class IntoTheDeepTele extends LinearOpMode {
             double slidePower = (leftTrigger - rightTrigger);
             slideMotor.setPower(slidePower);
 
-
-
-
-            if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y) {
-                if (linkagePos == 1) {
-                    leftLinkage.setPosition(0);
-                    rightLinkage.setPosition(1);
+            if (gamepad1.y && currentGamepad1.y && !previousGamepad1.y) {
+                if (speed == 0.8) {
+                    speed = 0.4;
                 } else {
-                    leftLinkage.setPosition(1);
-                    rightLinkage.setPosition(0);
+                    speed = 0.8;
                 }
-                linkagePos = -linkagePos;
             }
-            //                telemetry.addData("leftpos",leftLinkage.getPosition());
-            //                telemetry.addData("rightpos",rightLinkage.getPosition());
+
+
+            //Linkage Extend and Retract
+            if (gamepad2.left_bumper && currentGamepad2.left_bumper && !previousGamepad2.left_bumper) {
+                if (linkRetract) {
+                    leftLinkage.setPosition(0);
+                    rightLinkage.setPosition(0);
+                } else {
+                    leftLinkage.setPosition(.25);
+                    rightLinkage.setPosition(.25);
+                }
+                linkRetract = !linkRetract;
+            }
+
+            if (gamepad2.right_bumper && currentGamepad2.right_bumper && !previousGamepad2.right_bumper) {
+                if (armCounter % 3 == 0) {
+                    leftIntake.setPosition(0.75);
+                    rightIntake.setPosition(0.75);
+                    intakeWrist.setPosition(0.1);
+                } else if (armCounter % 3 == 1) {
+                    leftIntake.setPosition(0.85);
+                    rightIntake.setPosition(0.8);
+                } else if (armCounter % 3 == 2) {
+                    leftIntake.setPosition(0);
+                    rightIntake.setPosition(0);
+                    intakeWrist.setPosition(0.3);
+                }
+                armCounter++;
+            }
+            /*
+            if(gamepad1.right_bumper && currentGamepad2.right_bumper && !previousGamepad2.right_bumper){
+
+            }
+
+             */
 
             if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                if (bottomWrist.getPosition() == 0) {
-                    bottomWrist.setPosition(1);
+                leftOutput.setPosition(0.05);
+                rightOutput.setPosition(0.05);
+                outputWrist.setPosition(0.75);
+            }
+
+            if (gamepad2.a && currentGamepad2.a && !previousGamepad2.a) {
+                if (inClawClosed) {
+                    intakeClaw.setPosition(0);
                 } else {
-                    bottomWrist.setPosition(0);
+                    intakeClaw.setPosition(0.5);
                 }
+                inClawClosed = !inClawClosed;
             }
-            telemetry.update();
 
 
-            /*
-            double wheelPos = wheelServo.getPosition();
+            if (gamepad2.b && currentGamepad2.b && !previousGamepad2.b) {
+                if (outClawClosed) {
+                    outputClaw.setPosition(0);
+                } else {
+                    outputClaw.setPosition(0.5);
+                }
+                outClawClosed = !outClawClosed;
+            }
 
-            //CR SERVO: POSITION OF 0.5 = STOP, <0.5 = REVERSE, >0.5 = FORWARD
-            //IF GAMEPAD IS DOUBLE-CLICKED
             if (gamepad1.b && currentGamepad1.b && !previousGamepad1.b) {
-                if (wheelPos != 0.7)
-                    wheelServo.setPosition(0.7);
-                else
-                    wheelServo.setPosition(0.5);
-            }
-            if (gamepad1.a && currentGamepad1.a && !previousGamepad1.a) {
-                if (wheelPos != 0.3)
-                    wheelServo.setPosition(0.3);
-                else
-                    wheelServo.setPosition(0.5);
-            }
-            */
 
+                outputClaw.setPosition(1);
+                if (outClawClosed) outClawClosed = false;
+
+                leftOutput.setPosition(0.375);
+                rightOutput.setPosition(0.375);
+                outputWrist.setPosition(0.05);
+
+                /*leftLinkage.setPosition(0.05);
+                rightLinkage.setPosition(0.05);
+                leftIntake.setPosition(0.05);
+                rightIntake.setPosition(0.05);
+                intakeWrist.setPosition(0.4);*/
+
+            }
+
+            if (gamepad1.a && currentGamepad1.a && !previousGamepad1.a) {
+
+                leftLinkage.setPosition(0.1);
+                rightLinkage.setPosition(0.1);
+                leftIntake.setPosition(0.1);
+                rightIntake.setPosition(0.1);
+                intakeWrist.setPosition(0.1);
+
+            }
+
+            telemetry.addData("Intake Claw Closed: ", inClawClosed);
+            telemetry.addData("Output Claw Closed: ", outClawClosed);
+            telemetry.update();
         }
+
     }
+
+
 }
