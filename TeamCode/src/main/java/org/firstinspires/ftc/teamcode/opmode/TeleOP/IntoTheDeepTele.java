@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.subsystem.HorizSlide;
 
@@ -22,21 +23,28 @@ public class IntoTheDeepTele extends LinearOpMode {
         DcMotor backLeft = hardwareMap.dcMotor.get("leftBack");
         DcMotor frontRight = hardwareMap.dcMotor.get("rightFront");
         DcMotor backRight = hardwareMap.dcMotor.get("rightBack");
-        DcMotorEx slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+
+        DcMotorEx slideLeft = hardwareMap.get(DcMotorEx.class, "slideLeft");
+        DcMotorEx slideRight = hardwareMap.get(DcMotorEx.class, "slideRight");
+
         Servo leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
         Servo rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
+
         Servo leftIntake = hardwareMap.get(Servo.class, "leftIntake");
         Servo rightIntake = hardwareMap.get(Servo.class, "rightIntake");
-        Servo intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
+
         Servo intakeClaw = hardwareMap.get(Servo.class, "intakeClaw");
         Servo outputClaw = hardwareMap.get(Servo.class, "outputClaw");
+
+        Servo intakeWrist = hardwareMap.get(Servo.class, "intakeWrist");
         Servo outputWrist = hardwareMap.get(Servo.class, "outputWrist");
+
         Servo leftOutput = hardwareMap.get(Servo.class, "leftOutput");
         Servo rightOutput = hardwareMap.get(Servo.class, "rightOutput");
 
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        //slideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        slideLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftLinkage.setDirection(Servo.Direction.REVERSE);
         leftIntake.setDirection(Servo.Direction.REVERSE);
@@ -47,9 +55,9 @@ public class IntoTheDeepTele extends LinearOpMode {
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        slideMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-
+        //STARTS A TIMER SO WE CAN ADD DELAYS LATER
+        ElapsedTime runtime = new ElapsedTime();
 
         //LETS THE "ROTATE()" METHOD DO THE REST
         Gamepad currentGamepad1 = new Gamepad();
@@ -58,24 +66,33 @@ public class IntoTheDeepTele extends LinearOpMode {
         Gamepad previousGamepad1 = new Gamepad();
         Gamepad previousGamepad2 = new Gamepad();
 
-        //STARTS AT FULL SPEED
-        double speed = .8;
+        //STARTS AT 1 SPEED
+        double speed = 1;
 
         boolean linkRetract = true;
         int armCounter = 0;
         boolean inClawClosed = false;
-        boolean outClawClosed = true;
+        boolean outClawClosed = false;
+        boolean thrownBack = true;
+        double extendTime = 0, retractTime = 0;
+        int direction = 1;
 
         leftLinkage.setPosition(0);
         rightLinkage.setPosition(0);
+
         intakeClaw.setPosition(0);
-        outputClaw.setPosition(0.5);
-        intakeWrist.setPosition(.4);
-        leftOutput.setPosition(0);
-        rightOutput.setPosition(0);
-        outputWrist.setPosition(.1);
+        outputClaw.setPosition(0);
+
+        intakeWrist.setPosition(0.3);
+        leftIntake.setPosition(0);
+        rightIntake.setPosition(0);
+        leftOutput.setPosition(0.05);
+        rightOutput.setPosition(0.05);
+        outputWrist.setPosition(0.6);
 
         waitForStart();
+
+        runtime.reset();
 
         if (isStopRequested()) return;
 
@@ -99,74 +116,98 @@ public class IntoTheDeepTele extends LinearOpMode {
 
             //GETS DENOMINATOR THAT WILL DIVIDE BY TOTAL POWER (SO ROBOT DOESN'T GO SUPER-FAST)
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            //HALF-SPEED TOGGLe
 
 
             //SETS MOVEMENT OF ROBOT (FORWARD +- SIDE TO SIDE +- ROTATION)/TOTAL POWER
-            frontLeft.setPower(((y + x + rx) / denominator) * speed);
-            backLeft.setPower(((y - x + rx) / denominator) * speed);
-            frontRight.setPower(((y - x - rx) / denominator) * speed);
-            backRight.setPower(((y + x - rx) / denominator) * speed);
+            frontLeft.setPower(((y + x + rx) / denominator) * speed * direction);
+            backLeft.setPower(((y - x + rx) / denominator) * speed * direction);
+            frontRight.setPower(((y - x - rx) / denominator) * speed * direction);
+            backRight.setPower(((y + x - rx) / denominator) * speed * direction);
 
             //SET VARIABLE FOR TRIGGERS. THEY RETURN ONLY POSITIVE VALUES FROM 0-1 DEPENDING ON HOW
             //MUCH THEY'RE PRESSED
             double leftTrigger = gamepad2.left_trigger;
             double rightTrigger = gamepad2.right_trigger;
 
-            //RIGHT GOES UP, LEFT GOES DOWN. DIVIDE BY 2 FOR HALF SPEED.
-            double slidePower = (leftTrigger - rightTrigger);
-            slideMotor.setPower(slidePower);
+            //RIGHT GOES UP, LEFT GOES DOWN.
+            double slidePower = (rightTrigger - leftTrigger);
+            slideLeft.setPower(slidePower * .8);
+            slideRight.setPower(slidePower * .8);
 
-            if (gamepad1.y && currentGamepad1.y && !previousGamepad1.y) {
-                if (speed == 0.8) {
-                    speed = 0.4;
+            //SPEED TOGGLE
+            if (gamepad1.x && currentGamepad1.x && !previousGamepad1.x) {
+                if (speed == 1) {
+                    speed = 0.6;
                 } else {
-                    speed = 0.8;
+                    speed = 1;
                 }
             }
 
+            //DIRECTION TOGGLE
+            if (gamepad1.a && currentGamepad1.a && !previousGamepad1.a){
+                direction = -direction;
+            }
 
-            //Linkage Extend and Retract
-            if (gamepad2.left_bumper && currentGamepad2.left_bumper && !previousGamepad2.left_bumper) {
-                if (linkRetract) {
-                    leftLinkage.setPosition(0);
-                    rightLinkage.setPosition(0);
+            //TOGGLE OUTPUT CLAW - 0 IS OPEN, O.5 IS CLOSED
+            if (gamepad1.b && currentGamepad1.b && !previousGamepad1.b){
+                if (outClawClosed) {
+                    outputClaw.setPosition(.5);
                 } else {
-                    leftLinkage.setPosition(.25);
-                    rightLinkage.setPosition(.25);
+                    outputClaw.setPosition(0);
+                }
+                outClawClosed = !outClawClosed;
+            }
+
+            // THROWS IT BACK! OUTPUT CLAW ROTATES IN AND OUT
+            if (gamepad1.y && currentGamepad1.y && !previousGamepad1.y){
+                if (thrownBack){
+                    leftOutput.setPosition(0.43);
+                    rightOutput.setPosition(0.43);
+                    outputWrist.setPosition(0);
+                }
+                else{
+                    leftOutput.setPosition(0.05);
+                    rightOutput.setPosition(0.05);
+                    outputWrist.setPosition(0.6);
+                }
+                thrownBack = !thrownBack;
+            }
+
+            //EXTENDS AND RETRACTS LINKAGES
+            if (gamepad2.y && currentGamepad2.y && !previousGamepad2.y){
+                if (linkRetract) {
+                    //extendTime = runtime.time();
+                    leftLinkage.setPosition(0.50);
+                    rightLinkage.setPosition(0.50);
+                    leftIntake.setPosition(0.89);
+                    rightIntake.setPosition(0.89);
+                    intakeWrist.setPosition(0.08);
+                } else {
+                    //retractTime = runtime.time();
+                    leftLinkage.setPosition(0.07);
+                    rightLinkage.setPosition(0.07);
+                    leftIntake.setPosition(0);
+                    rightIntake.setPosition(0);
+                    intakeWrist.setPosition(0.35);
                 }
                 linkRetract = !linkRetract;
             }
+            //TIMED COMMANDS
+//            if(runtime.time()-extendTime<3 && runtime.time()>3){
+//                leftIntake.setPosition(0.75);
+//                rightIntake.setPosition(0.75);
+//                intakeWrist.setPosition(0.1);
+//            }
+//            if (runtime.time()-retractTime<3 && runtime.time()>3){
+//                leftIntake.setPosition(0);
+//                rightIntake.setPosition(0);
+//                intakeWrist.setPosition(0.3);
+//            }
 
-            if (gamepad2.right_bumper && currentGamepad2.right_bumper && !previousGamepad2.right_bumper) {
-                if (armCounter % 3 == 0) {
-                    leftIntake.setPosition(0.75);
-                    rightIntake.setPosition(0.75);
-                    intakeWrist.setPosition(0.1);
-                } else if (armCounter % 3 == 1) {
-                    leftIntake.setPosition(0.85);
-                    rightIntake.setPosition(0.8);
-                } else if (armCounter % 3 == 2) {
-                    leftIntake.setPosition(0);
-                    rightIntake.setPosition(0);
-                    intakeWrist.setPosition(0.3);
-                }
-                armCounter++;
-            }
-            /*
-            if(gamepad1.right_bumper && currentGamepad2.right_bumper && !previousGamepad2.right_bumper){
 
-            }
 
-             */
-
-            if (gamepad2.x && currentGamepad2.x && !previousGamepad2.x) {
-                leftOutput.setPosition(0.05);
-                rightOutput.setPosition(0.05);
-                outputWrist.setPosition(0.75);
-            }
-
-            if (gamepad2.a && currentGamepad2.a && !previousGamepad2.a) {
+            //TOGGLES INTAKE CLAW
+            if (gamepad2.b && currentGamepad2.b && !previousGamepad2.b){
                 if (inClawClosed) {
                     intakeClaw.setPosition(0);
                 } else {
@@ -176,41 +217,7 @@ public class IntoTheDeepTele extends LinearOpMode {
             }
 
 
-            if (gamepad2.b && currentGamepad2.b && !previousGamepad2.b) {
-                if (outClawClosed) {
-                    outputClaw.setPosition(0);
-                } else {
-                    outputClaw.setPosition(0.5);
-                }
-                outClawClosed = !outClawClosed;
-            }
 
-            if (gamepad1.b && currentGamepad1.b && !previousGamepad1.b) {
-
-                outputClaw.setPosition(1);
-                if (outClawClosed) outClawClosed = false;
-
-                leftOutput.setPosition(0.375);
-                rightOutput.setPosition(0.375);
-                outputWrist.setPosition(0.05);
-
-                /*leftLinkage.setPosition(0.05);
-                rightLinkage.setPosition(0.05);
-                leftIntake.setPosition(0.05);
-                rightIntake.setPosition(0.05);
-                intakeWrist.setPosition(0.4);*/
-
-            }
-
-            if (gamepad1.a && currentGamepad1.a && !previousGamepad1.a) {
-
-                leftLinkage.setPosition(0.1);
-                rightLinkage.setPosition(0.1);
-                leftIntake.setPosition(0.1);
-                rightIntake.setPosition(0.1);
-                intakeWrist.setPosition(0.1);
-
-            }
 
             telemetry.addData("Intake Claw Closed: ", inClawClosed);
             telemetry.addData("Output Claw Closed: ", outClawClosed);

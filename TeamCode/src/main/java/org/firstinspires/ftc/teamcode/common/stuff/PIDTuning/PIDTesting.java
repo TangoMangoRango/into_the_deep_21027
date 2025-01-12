@@ -30,8 +30,8 @@ public class PIDTesting extends LinearOpMode {
         Servo rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
 
         //Currently the one I care about
-        DcMotorEx slideMotor1 = hardwareMap.get(DcMotorEx.class, "slideMotor1");
-        DcMotorEx slideMotor2 = hardwareMap.get(DcMotorEx.class, "slideMotor2");
+        DcMotorEx slideMotor1 = hardwareMap.get(DcMotorEx.class, "slideLeft");
+        DcMotorEx slideMotor2 = hardwareMap.get(DcMotorEx.class, "slideRight");
         slideMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //Slides look good at 0.02, 0, 0.0001
