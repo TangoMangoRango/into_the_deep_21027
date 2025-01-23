@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import static org.firstinspires.ftc.teamcode.common.stuff.Globals.*;
 
 public class HorizSlide {
     Servo leftLinkage;
@@ -14,6 +15,8 @@ public class HorizSlide {
     Servo rightIntake;
     Servo intakeWrist;
     Servo intakeClaw;
+
+
 
     public HorizSlide(HardwareMap hardwareMap) {
         leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
@@ -29,42 +32,49 @@ public class HorizSlide {
         leftIntake.setDirection(Servo.Direction.REVERSE);
         intakeClaw.setDirection(Servo.Direction.REVERSE);
 
-        intakeClaw.setPosition(0);
+        leftLinkage.setPosition(LINKAGE_POSITION_INIT);
+        rightLinkage.setPosition(LINKAGE_POSITION_INIT);
+
+        intakeClaw.setPosition(CLAW_OPEN);
+
+        intakeWrist.setPosition(INTAKE_WRIST_POSITION_RETRACT);
+        leftIntake.setPosition(INTAKE_ARM_POSITION_RETRACT);
+        rightIntake.setPosition(INTAKE_ARM_POSITION_RETRACT);
     }
 
     public class Extend implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            leftLinkage.setPosition(0.5);
-            rightLinkage.setPosition(0.5);
-            leftIntake.setPosition(0.83);
-            rightIntake.setPosition(0.83);
-            intakeWrist.setPosition(0.03);
+            leftLinkage.setPosition(LINKAGE_POSITION_EXTEND);
+            rightLinkage.setPosition(LINKAGE_POSITION_EXTEND);
+            leftIntake.setPosition(INTAKE_ARM_POSITION_EXTEND);
+            rightIntake.setPosition(INTAKE_ARM_POSITION_EXTEND);
+            intakeWrist.setPosition(INTAKE_WRIST_POSITION_EXTEND);
             return false;
         }
     }
     public class Retract implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            leftLinkage.setPosition(0.06);
-            rightLinkage.setPosition(0.06);
-            leftIntake.setPosition(0);
-            rightIntake.setPosition(0);
-            intakeWrist.setPosition(0.35);
+            leftLinkage.setPosition(LINKAGE_POSITION_RETRACT);
+            rightLinkage.setPosition(LINKAGE_POSITION_RETRACT);
+            leftIntake.setPosition(INTAKE_ARM_POSITION_RETRACT);
+            rightIntake.setPosition(INTAKE_ARM_POSITION_RETRACT);
+            intakeWrist.setPosition(INTAKE_WRIST_POSITION_RETRACT);
             return false;
         }
     }
     public class OpenClaw implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            intakeClaw.setPosition(0);
+            intakeClaw.setPosition(CLAW_OPEN);
             return false;
         }
     }
     public class CloseClaw implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            intakeClaw.setPosition(.5);
+            intakeClaw.setPosition(CLAW_CLOSE);
             return false;
         }
     }
@@ -76,6 +86,6 @@ public class HorizSlide {
     public Action retractIntake() {
         return new HorizSlide.Retract();
     }
-    public Action openClaw() { return new HorizSlide.OpenClaw();}
-    public Action closeClaw() { return new HorizSlide.CloseClaw();}
+    public Action openIntakeClaw() { return new HorizSlide.OpenClaw();}
+    public Action closeIntakeClaw() { return new HorizSlide.CloseClaw();}
 }
